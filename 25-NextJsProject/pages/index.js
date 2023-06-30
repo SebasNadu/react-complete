@@ -1,28 +1,21 @@
+import Head from "next/head";
+import { MongoClient } from "mongodb";
+
 import MeetupList from "../components/meetups/MeetupList";
 
-const DUMMY_MEETUPS = [
-  {
-    id: "m1",
-    title: "This is a first meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Meetup_Logo.png/800px-Meetup_Logo.png",
-    address: "Some address 5, 12345 Some City",
-    description:
-      "This is a first, amazing meetup which you definitely should not miss. It will be a lot of fun!",
-  },
-  {
-    id: "m2",
-    title: "This is a second meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Meetup_Logo.png/800px-Meetup_Logo.png",
-    address: "Some address 10, 12345 Some City",
-    description:
-      "This is a second, amazing meetup which you definitely should not miss. It will be a lot of fun!",
-  },
-];
-
-const HomePage = () => {
-  return <MeetupList meetups={DUMMY_MEETUPS} />;
+const HomePage = (props) => {
+  return (
+    <>
+      <Head>
+        <title>React Meetups</title>
+        <meta
+          name="description"
+          content="Browse a huge list of highly active React meetups!"
+        />
+      </Head>
+      <MeetupList meetups={props.meetups} />
+    </>
+  );
 };
 
 /* export const getServerSideProps = async (context) => {
@@ -39,9 +32,27 @@ const HomePage = () => {
 
 export async function getStaticProps() {
   // fetch data from an api
+
+  const client = await MongoClient.connect(
+    "mongodb+srv://SebasNadu:Jnaitsabes9@cluster0.yvg09bl.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const meetups = await meetupsCollection.find().toArray();
+
+  client.close();
+
   return {
     props: {
-      meetups: DUMMY_MEETUPS,
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString(),
+        description: meetup.description,
+      })),
     },
     revalidate: 10,
   };
